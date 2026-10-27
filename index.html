@@ -1197,7 +1197,8 @@ function tickPeek(dt){
   if (!peekOn) return;
   const vx = pxT - px; px += vx * Math.min(1, dt * 9); py += (pyT - py) * Math.min(1, dt * 9);
   pRot += (clamp(vx * .08, -14, 14) - pRot) * Math.min(1, dt * 6);
-  peek.style.transform = `translate(${(px + 24).toFixed(1)}px,${(py - 125).toFixed(1)}px) rotate(${pRot.toFixed(2)}deg)`;
+  const tx = Math.min(px + 24, innerWidth - 262), ty = clamp(py - 125, 12, innerHeight - 262);
+  peek.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) rotate(${pRot.toFixed(2)}deg)`;
 }
 
 /* ---------- Phiếu đặt hàng ---------- */
