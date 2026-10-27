@@ -1,6 +1,6 @@
-# Plinth
+# Turnwood
 
-Website bán nội thất của Plinth, dạng phòng trưng bày 3D. Cuộn trang để trượt ngang qua tám thiết kế, mỗi thiết kế đặt trên một phông màu riêng. Bạn có thể đổi gỗ, vải và ánh sáng ngay trên mô hình, rồi xem giá cập nhật theo cấu hình.
+Website bán nội thất của Turnwood, dạng phòng trưng bày 3D. Cuộn trang để trượt ngang qua tám thiết kế, mỗi thiết kế đặt trên một phông màu riêng. Bạn có thể đổi gỗ, vải và ánh sáng ngay trên mô hình, rồi xem giá cập nhật theo cấu hình.
 
 ## Tính năng
 
