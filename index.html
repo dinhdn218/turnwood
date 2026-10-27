@@ -782,7 +782,7 @@ panelsEl.innerHTML = `
         <li class="layer" data-n="4"><span class="lnum">04</span><div><h3>Vỏ bọc tháo rời</h3><p>Vỏ đệm có khoá kéo giấu, tháo ra giặt hoặc thay màu vải về sau.</p><span class="mono">Bouclé 450 g/m²</span></div><i class="ldot"></i></li>
         <li class="layer" data-n="3"><span class="lnum">03</span><div><h3>Mút D40 bọc bông tấm</h3><p>Lõi mút tỷ trọng 40 kg/m³, phủ thêm bông tấm để mặt đệm mềm mà không xẹp.</p><span class="mono">D40 · dày 9 cm</span></div><i class="ldot"></i></li>
         <li class="layer" data-n="2"><span class="lnum">02</span><div><h3>Đai đàn hồi</h3><p>Năm dải đai cao su căng ngang khung, giữ độ nhún đều sau nhiều năm ngồi.</p><span class="mono">Bản 50 mm · 5 dải</span></div><i class="ldot"></i></li>
-        <li class="layeron"><span class="lnum">01</span><div><h3>Khung gỗ sồi ghép mộng</h3><p>Sồi trắng sấy còn 8% ẩm, ghép mộng âm dương với keo chịu nước D3. Không dùng vít lộ.</p><span class="mono">Bảo hành khung 10 năm</span></div><i class="ldot"></i></li>
+        <li class="layer on" data-n="1"><span class="lnum">01</span><div><h3>Khung gỗ sồi ghép mộng</h3><p>Sồi trắng sấy còn 8% ẩm, ghép mộng âm dương với keo chịu nước D3. Không dùng vít lộ.</p><span class="mono">Bảo hành khung 10 năm</span></div><i class="ldot"></i></li>
       </ol>
     </div>
     <div class="p-buy"><span class="mono">Tách lớp</span><output class="p-price" id="exOut">0%</output><span class="mono">Cuộn tiếp để tách từng lớp</span></div>
@@ -1136,6 +1136,7 @@ function initTheatre(){
       (mobile ? anchorsR : anchorsL).forEach(([obj, loc], i) => {
         tmp.fromArray(loc); obj.localToWorld(tmp); const a = project(tmp);
         if (!mobile) {
+          if (!ldots[i]) return;
           const dr = ldots[i].getBoundingClientRect(), x1 = dr.left + 3.5 - sr.left, y1 = dr.top + 3.5 - sr.top;
           leaders[i].p.setAttribute('d', `M${x1.toFixed(1)} ${y1.toFixed(1)}H${(x1 + 28).toFixed(1)}L${a.x.toFixed(1)} ${a.y.toFixed(1)}`);
           leaders[i].c.setAttribute('cx', a.x.toFixed(1)); leaders[i].c.setAttribute('cy', a.y.toFixed(1));
@@ -1278,8 +1279,8 @@ function frame(now){
   const x = Math.min(uS, LAST), e = clamp((uS - LAST) / 1.6, 0, 1);
   if (Math.abs(uS - lastDomU) > .0002) { layoutDom(x, e); lastDomU = uS; }
   hudTone();
-  if (theatre) theatre.tick(now, dt, x, e);
   tickPeek(dt);
+  if (theatre) { try { theatre.tick(now, dt, x, e); } catch (err) { if (!frame.warned) { frame.warned = true; console.warn(err); } } }
 }
 requestAnimationFrame(frame);
 })();
