@@ -1212,21 +1212,46 @@ function tickPeek(dt){
 const cartEl = $('#cart'), scrim = $('#scrim'), cartBtn = $('#cartBtn');
 $('#rcDate').textContent = 'Ngày ' + new Date().toLocaleDateString('vi-VN');
 let lastFocus = null;
-function openCart(){ if (studio.open) closeStudio(); lastFocus = document.activeElement; cartEl.inert = false; cartEl.classList.add('open'); scrim.classList.add('open'); $('#rcNote').hidden = true; renderCart(); setTimeout(() => $('#cartClose').focus(), 60); }
+function openCart(){ if (studio.open) closeStudio(); lastFocus = document.activeElement; cartEl.inert = false; cartEl.classList.add('open'); scrim.classList.add('open'); $('#rcNote').hidden = true; $('#cartBody').innerHTML = ''; renderCart(); setTimeout(() => $('#cartClose').focus(), 60); }
 function closeCart(){ cartEl.classList.remove('open'); scrim.classList.remove('open'); cartEl.inert = true; if (lastFocus) lastFocus.focus({preventScroll:true}); }
 cartBtn.addEventListener('click', openCart); $('#cartClose').addEventListener('click', closeCart); scrim.addEventListener('click', closeCart);
 addEventListener('keydown', e => { if (e.key === 'Escape' && cartEl.classList.contains('open')) closeCart(); });
 $('#checkout').addEventListener('click', () => { const n = $('#rcNote'); n.hidden = false; if (!RM) n.animate([{clipPath:'inset(0 0 100% 0)'}, {clipPath:'inset(0)'}], {duration:500, easing:'steps(6)'}); });
+const EMPTY_HTML = '<p class="rc-empty">Phiếu đang trống. Đi qua phòng trưng bày và bấm Thêm vào giỏ ở thiết kế bạn thích.</p>';
+function itemHTML(i, n){
+  const p = P[i.id], url = thumbFor(i.id, i.cfg, 160);
+  return `<div class="rc-item" data-sku="${i.sku}" style="animation-delay:${n * 90}ms">${url ? `<img src="${url}" alt="">` : '<span class="ph" aria-hidden="true"></span>'}
+      <div><b>${p.name}</b><span class="mono">${matLine(p, i.cfg)}</span><span class="mono">${i.sku}</span></div>
+      <div class="rc-line"><span class="rc-ctl" role="group" aria-label="Số lượng ${p.name}"><button type="button" data-dec="${i.sku}" aria-label="Bớt một">−</button><span data-q>${i.qty}</span><button type="button" data-inc="${i.sku}" aria-label="Thêm một">+</button><button class="rm" type="button" data-rm="${i.sku}">Xoá</button></span><span class="rc-amt" data-amt>${vnd(priceOf(p, i.cfg) * i.qty)}</span></div></div>`;
+}
 function renderCart(){
   const items = state.cart, count = items.reduce((s, i) => s + i.qty, 0), sub = items.reduce((s, i) => s + priceOf(P[i.id], i.cfg) * i.qty, 0);
   $('#cartCount').textContent = count; cartBtn.setAttribute('aria-label', `Mở phiếu đặt hàng, ${count} sản phẩm`);
   $('#sumSub').textContent = vnd(sub); $('#sumTotal').textContent = vnd(sub); $('#cartFoot').hidden = !items.length;
-  $('#cartBody').innerHTML = items.length ? items.map((i, n) => {
-    const p = P[i.id], unit = priceOf(p, i.cfg), url = thumbFor(i.id, i.cfg, 160);
-    return `<div class="rc-item" style="animation-delay:${n * 90}ms">${url ? `<img src="${url}" alt="">` : '<span class="ph" aria-hidden="true"></span>'}
-      <div><b>${p.name}</b><span class="mono">${matLine(p, i.cfg)}</span><span class="mono">${i.sku}</span></div>
-      <div class="rc-line"><span class="rc-ctl" role="group" aria-label="Số lượng ${p.name}"><button type="button" data-dec="${i.sku}" aria-label="Bớt một">−</button><span>${i.qty}</span><button type="button" data-inc="${i.sku}" aria-label="Thêm một">+</button><button class="rm" type="button" data-rm="${i.sku}">Xoá</button></span><span class="rc-amt">${vnd(unit * i.qty)}</span></div></div>`;
-  }).join('') : '<p class="rc-empty">Phiếu đang trống. Đi qua phòng trưng bày và bấm Thêm vào giỏ ở thiết kế bạn thích.</p>';
+  const body = $('#cartBody');
+  // Chỉ cập nhật phần thay đổi, không vẽ lại cả danh sách (tránh hiệu ứng in chạy lại gây nháy)
+  if (!items.length) { $$('.rc-item', body).forEach(el => el.remove()); if (!$('.rc-empty', body)) body.innerHTML = EMPTY_HTML; return; }
+  const empty = $('.rc-empty', body); if (empty) empty.remove();
+  const seen = new Map($$('.rc-item:not(.leaving)', body).map(el => [el.dataset.sku, el]));
+  let fresh = 0;
+  items.forEach(i => {
+    const el = seen.get(i.sku);
+    if (!el) { body.insertAdjacentHTML('beforeend', itemHTML(i, fresh++)); return; }
+    seen.delete(i.sku);
+    const q = $('[data-q]', el), a = $('[data-amt]', el);
+    if (q.textContent !== String(i.qty)) {
+      q.textContent = i.qty; a.textContent = vnd(priceOf(P[i.id], i.cfg) * i.qty);
+      if (!RM) a.animate([{transform:'translateY(-4px)', opacity:.35}, {transform:'none', opacity:1}], {duration:280, easing:'cubic-bezier(.16,1,.3,1)'});
+    }
+    const ph = $('.ph', el);
+    if (ph) { const url = thumbFor(i.id, i.cfg, 160); if (url) { const img = new Image(); img.src = url; img.alt = ''; ph.replaceWith(img); } }
+  });
+  seen.forEach(el => {
+    el.classList.add('leaving');
+    if (RM) { el.remove(); return; }
+    el.style.pointerEvents = 'none';
+    el.animate([{opacity:1, transform:'none'}, {opacity:0, transform:'translateX(24px)'}], {duration:240, easing:'ease-in', fill:'forwards'}).onfinish = () => el.remove();
+  });
 }
 $('#cartBody').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
